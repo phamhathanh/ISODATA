@@ -63,7 +63,7 @@ data_from_lrn_file 'WingNut.lrn'
 
     isodata = Isodata.new(desiredClusterCount, minClusterSize, maxDeviation, minClustersDistance, maxPairsLumped, maxIteration)
 
-    data = data_from_lrn_file 'germany.lrn'
+    data = data_from_lrn_file 'data/Lol.lrn'
     return isodata.analyze data
   end
 
@@ -72,6 +72,7 @@ data_from_lrn_file 'WingNut.lrn'
     File.open filePath do |file|
       file.each_line.drop(4).each do |line|
         cells = line.split("\t")
+        next if cells.size != 3
         output.push Vector[cells[1].to_f, cells[2].to_f]
       end
     end
