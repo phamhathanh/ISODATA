@@ -1,3 +1,4 @@
+require 'matrix'
 require 'set'
 require './cluster'
 
@@ -28,29 +29,34 @@ class Isodata
       splittingHappened = false
       until splittingHappened
 
-        @clusters.each do |cluster|
+        unchecked_clusters = @clusters.to_a
+        centers = Hash.new
+        @clusters.each { |cluster| centers[cluster] = cluster.center }
+        # A temporary collection of centers is created since the algorithm said so.
 
+        until unchecked_clusters.empty?
+
+          cluster = unchecked_clusters.pop
           hasEnoughMember = cluster.size >= @minClusterSize
           next if hasEnoughMember
 
           @clusters.delete cluster
+          centers.delete cluster
 
           orphans = cluster.vectors
           orphans.each do |vector|
             nearestCluster = get_nearest_cluster vector
             nearestCluster.add vector
-
-            # A bit different from the algorithm.
           end
         end
 
         splittingHappened = false
-        if iteration < @maxIteration
+        if iteration >= @maxIteration
 
-          minClustersDistance = 0
+          @minClustersDistance = 0
         else
 
-          if @clusters.size <= @desiredClusterCount / 2 or not (iteration % 2 == 0 or @clusters.size >= 2 * @desiredClusterCount)
+          unless @clusters.size > @desiredClusterCount / 2 and (iteration % 2 == 0 or @clusters.size >= 2 * @desiredClusterCount)
 
             unchecked_clusters = @clusters.to_a
             until unchecked_clusters.empty?
@@ -81,7 +87,9 @@ class Isodata
       return @clusters if @maxPairsLumped == 0
 
       tooCloseClusterPairs = Array.new
-      all_pairs_of_clusters.each do |cluster1, cluster2|
+
+      allPairs = @clusters.to_a.combination(2)
+      allPairs.each do |cluster1, cluster2|
 
         distance = distance(cluster1.center, cluster2.center)
         tooCloseClusterPairs.add [center1, center2] if distance < @minClustersDistance
@@ -101,30 +109,30 @@ class Isodata
 
   private
 
-  def create_random_clusters
+  def lump clusterPair
+    cluster1 = clusterPair[0]
+    cluster2 = clusterPair[1]
+    newCluster = cluster1.merge cluster2
 
+    @clusters.delete cluster1
+    @clusters.delete cluster2
+    @clusters.add newCluster
   end
 
-  def lump clusters
-
-
-  end
-
-  def get_nearest_cluster vector
+  def get_nearest_cluster(vector, centers)
 
     raise ArgumentError, 'There is no cluster.' if @clusters.empty?
     # Should be InvalidOperation.
 
     clusters = @clusters.to_a
     nearest = clusters.first
+    record = distance(centers[nearest], vector)
     @clusters.drop(1).each do |cluster|
-      nearest = cluster if distance(cluster.center, vector) < distance(nearest.center, vector)
+      if distance(centers[cluster], vector) < record
+        nearest = cluster
+        record = distance(centers[nearest], vector)
+      end
     end
-  end
-
-  def all_pairs_of_clusters
-
-
   end
 
   def distance(vector1, vector2)

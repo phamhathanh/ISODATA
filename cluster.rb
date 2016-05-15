@@ -39,7 +39,8 @@ class Cluster
   def center
     # Should be lazy-loaded and cached.
 
-    sum = Vector[0.0, 0.0]
+    zeroVector = Vector.basis(size:@dim, index:0) - Vector.basis(size:@dim, index:0)
+    sum = zeroVector
     @vectors.each do |vector|
       sum += vector
     end
