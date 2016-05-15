@@ -67,34 +67,36 @@ class Isodata
           end
         end
 
-        splittingHappened = false
         if iteration >= @maxIteration
-
           @minClustersDistance = 0
-        else
+          break
+        end
 
-          unless @clusters.size > @desiredClusterCount / 2 and (iteration % 2 == 0 or @clusters.size >= 2 * @desiredClusterCount)
+        if @clusters.size > @desiredClusterCount / 2 
+          break if iteration % 2 == 0 or @clusters.size >= 2 * @desiredClusterCount
+        end
 
-            unchecked_clusters = @clusters.to_a
-            until unchecked_clusters.empty?
+        unchecked_clusters = @clusters.to_a
+        until unchecked_clusters.empty?
 
-              cluster = unchecked_clusters.pop
-              deviationIsValid = cluster.max_deviation < @maxDeviation
-              next if deviationIsValid
-              next if @clusters.size > @desiredClusterCount / 2 and (cluster.average_distance <= @minClustersDistance or cluster.size <= 2*(@minClusterSize + 1))
-
-              # Split.
-              cluster1, cluster2 = cluster.split.to_a
-              unchecked_clusters.push cluster1
-              unchecked_clusters.push cluster2
-
-              @clusters.delete cluster
-              @clusters.add cluster1
-              @clusters.add cluster2
-
-              splittingHappened = true
-            end
+          cluster = unchecked_clusters.pop
+          oversized = cluster.max_deviation > @maxDeviation
+          next unless oversized
+          
+          if @clusters.size > @desiredClusterCount / 2 
+            next if (cluster.average_distance <= @minClustersDistance or cluster.size <= 2*(@minClusterSize + 1))
           end
+
+          # Split.
+          cluster1, cluster2 = cluster.split.to_a
+          unchecked_clusters.push cluster1
+          unchecked_clusters.push cluster2
+
+          @clusters.delete cluster
+          @clusters.add cluster1
+          @clusters.add cluster2
+
+          splittingHappened = true
         end
       end
 
@@ -104,7 +106,6 @@ class Isodata
 
       allPairs = @clusters.to_a.combination(2)
       allPairs.each do |cluster1, cluster2|
-
         distance = distance(cluster1.center, cluster2.center)
         tooCloseClusterPairs.add [center1, center2] if distance < @minClustersDistance
         # Should be replaced with pair

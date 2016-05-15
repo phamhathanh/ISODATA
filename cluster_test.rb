@@ -41,6 +41,10 @@ class ClusterTest < Minitest::Test
     cluster.add Vector[1, 5]
 
     assert_equal(cluster.center, Vector[1, 3])
+
+    cluster.clear
+    cluster.add Vector[1, 1]
+    assert_equal(cluster.center, Vector[1, 1])
   end
 
   def test_average_distance

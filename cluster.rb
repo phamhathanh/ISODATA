@@ -144,18 +144,19 @@ class Cluster
   def to_s
     return 'Empty' if @vectors.empty?
 
-    output = to_string vector
+    output = to_string vectors.first
     @vectors.drop(1).each { |vector|
       output += ', ' + to_string(vector)
     }
+    return output
   end
 
   private
 
   def to_string vector
-    output = '[' + vector[0]
+    output = '[' + vector[0].to_s
     vector.drop(1).each { |element|
-      output += ', ' + element
+      output += ', ' + element.to_s
     }
     output += ']'
   end
