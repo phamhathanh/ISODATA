@@ -4,6 +4,7 @@ require 'set'
 class Cluster
 
   attr_reader :dim
+  attr_reader :vectors
 
   def initialize dim
 
@@ -44,6 +45,10 @@ class Cluster
     end
 
     return sum / @vectors.size
+  end
+
+  def size
+    return @vectors.size
   end
 
   def average_distance
@@ -104,12 +109,44 @@ class Cluster
     return Set.new [cluster1, cluster2]
   end
 
-  alias_method :eql?, :==
+  def merge other
+
+    output = Cluster.new @dim
+    newVectors = @vectors.union other.vectors
+    newVectors.each { |vector| output.add vector }
+    return output
+  end
+
   def hash
-    return @vectors.to_a.hash
+    return @vectors.hash
+  end
+
+  def eql? other
+    return hash == other.hash
+  end
+
+  def == other
+    return hash == other.hash
+  end
+
+  def to_s
+    return 'Empty' if @vectors.empty?
+
+    output = to_string vector
+    @vectors.drop(1).each { |vector|
+      output += ', ' + to_string(vector)
+    }
   end
 
   private
+
+  def to_string vector
+    output = '[' + vector[0]
+    vector.drop(1).each { |element|
+      output += ', ' + element
+    }
+    output += ']'
+  end
 
   def distance(vector1, vector2)
     return (vector1 - vector2).magnitude

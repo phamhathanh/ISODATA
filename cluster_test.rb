@@ -95,4 +95,22 @@ class ClusterTest < Minitest::Test
 
     assert_equal(clusters, expected)
   end
+
+  def test_merge
+
+    x1 = Vector[0, 1]
+    x2 = Vector[2, 6]
+    x3 = Vector[1, 5]
+    x4 = Vector[2, 1]
+    x5 = Vector[1, 3]
+
+    cluster1 = Cluster[x1, x2, x3]
+    cluster2 = Cluster[x3, x4, x5]
+
+    cluster = cluster1.merge cluster2
+    expected = Cluster[x1, x2, x3, x4, x5]
+    expectedToo = Cluster[x2, x1, x3, x4, x5]
+
+    assert_equal(cluster, expected)
+  end
 end
