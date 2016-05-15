@@ -31,13 +31,25 @@ class Cluster
   end
 
   def add vector
-
     raise ArgumentError, 'Vector dimension does not match.' if vector.size != @dim
     @vectors.add vector
   end
 
+  def clear
+    @vectors = Set.new
+  end
+
+  private
+  def clear_cache
+    @center = nil
+    @averageDistance = nil
+    @standardDeviation = nil
+    @maxDeviation = nil
+  end
+  public
+
   def center
-    # Should be lazy-loaded and cached.
+    return @center unless @center.nil?
 
     zeroVector = Vector.basis(size:@dim, index:0) - Vector.basis(size:@dim, index:0)
     sum = zeroVector
@@ -45,7 +57,7 @@ class Cluster
       sum += vector
     end
 
-    return sum / @vectors.size
+    center = sum / @vectors.size
   end
 
   def size
@@ -53,18 +65,18 @@ class Cluster
   end
 
   def average_distance
-    # Should be lazy-loaded and cached.
+    return @averageDistance unless @averageDistance.nil?
 
     sum = 0.0
     @vectors.each do |vector|
       sum += distance(vector, center)
     end
 
-    return sum / @vectors.size
+    @averageDistance = sum / @vectors.size
   end
 
   def standard_deviation
-    # Should be lazy-loaded and cached.
+    return @standardDeviation unless @standardDeviation.nil?
 
     output = Array.new @dim
     @dim.times do |i|
@@ -81,8 +93,7 @@ class Cluster
   end
 
   def max_deviation
-    # Should be lazy-loaded and cached.
-
+    return @maxDeviation unless @maxDeviation.nil?
     return standard_deviation.max
   end
 

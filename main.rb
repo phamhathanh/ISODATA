@@ -7,6 +7,7 @@ class MyWindow < Gosu::Window
 
   def initialize
 
+data_from_lrn_file 'WingNut.lrn'
     @dot = Gosu::Image.new('dot.png', :tileable => true)
 
     @screenWidth = 1280
@@ -53,23 +54,28 @@ class MyWindow < Gosu::Window
 
   def run_isodata
 
-    desiredClusterCount = 5
+    desiredClusterCount = 3
     minClusterSize = 1
-    maxDeviation = 1.5
-    minClustersDistance = 4
+    maxDeviation = 5
+    minClustersDistance = 3
     maxPairsLumped = 1
-    maxIteration = 4
+    maxIteration = 3
 
     isodata = Isodata.new(desiredClusterCount, minClusterSize, maxDeviation, minClustersDistance, maxPairsLumped, maxIteration)
 
-    data = []
-    CSV.foreach './data.csv' do |row|
-
-      vector = Vector[*row.map { |cell| cell.to_f }]
-      data.push vector
-    end
-
+    data = data_from_lrn_file 'test.lrn'
     return isodata.analyze data
+  end
+
+  def data_from_lrn_file filePath
+    output = []
+    File.open filePath do |file|
+      file.each_line.drop(4).each do |line|
+        cells = line.split("\t")
+        output.push Vector[cells[1].to_f, cells[2].to_f]
+      end
+    end
+    return output
   end
 
   def screen_position vector
@@ -96,6 +102,5 @@ class MyWindow < Gosu::Window
     Gosu::Color.from_hsv(h, s, v)
   end
 end
-
 window = MyWindow.new
 window.show

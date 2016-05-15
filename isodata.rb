@@ -16,6 +16,15 @@ class Isodata
     # No validation yet.
   end
 
+  class TempCluster
+    attr_reader :cluster
+    attr_reader :center
+    def initialize(cluster, center)
+      @cluster = cluster
+      @center = center
+    end
+  end
+
   def analyze vectors
 
     raise ArgumentError, "Insufficient vectors." if vectors.size < @minClusterSize
@@ -23,16 +32,24 @@ class Isodata
     initialCluster = Cluster[*vectors]
     @clusters = Set.new [initialCluster]
 
-    iteration = 1
-    until iteration == @maxIteration
+    iteration = 0
+    until iteration + 1 == @maxIteration
+      iteration += 1
 
       splittingHappened = false
       until splittingHappened
 
         unchecked_clusters = @clusters.to_a
-        centers = Hash.new
-        @clusters.each { |cluster| centers[cluster] = cluster.center }
+
+        tempClusters = Array.new
+        @clusters.each { |cluster| tempClusters.push TempCluster.new(cluster, cluster.center) }
         # A temporary collection of centers is created since the algorithm said so.
+
+        @clusters.each { |cluster| cluster.clear }
+        vectors.each do |vector|
+          nearestCluster = get_nearest_cluster(vector, tempClusters)
+          nearestCluster.add vector
+        end
 
         until unchecked_clusters.empty?
 
@@ -41,11 +58,11 @@ class Isodata
           next if hasEnoughMember
 
           @clusters.delete cluster
-          centers.delete cluster
+          tempClusters.delete cluster
 
           orphans = cluster.vectors
           orphans.each do |vector|
-            nearestCluster = get_nearest_cluster vector
+            nearestCluster = get_nearest_cluster(vector, tempClusters)
             nearestCluster.add vector
           end
         end
@@ -64,10 +81,7 @@ class Isodata
               cluster = unchecked_clusters.pop
               deviationIsValid = cluster.max_deviation < @maxDeviation
               next if deviationIsValid
-
-              if @clusters.size > @desiredClusterCount / 2
-                next unless cluster.average_distance > @minClustersDistance and cluster.size > 2*(@minClusterSize + 1)
-              end
+              next if @clusters.size > @desiredClusterCount / 2 and (cluster.average_distance <= @minClustersDistance or cluster.size <= 2*(@minClusterSize + 1))
 
               # Split.
               cluster1, cluster2 = cluster.split.to_a
@@ -119,20 +133,22 @@ class Isodata
     @clusters.add newCluster
   end
 
-  def get_nearest_cluster(vector, centers)
+  def get_nearest_cluster(vector, tempClusters)
 
-    raise ArgumentError, 'There is no cluster.' if @clusters.empty?
+    raise ArgumentError, 'There is no cluster.' if tempClusters.empty?
     # Should be InvalidOperation.
 
-    clusters = @clusters.to_a
-    nearest = clusters.first
-    record = distance(centers[nearest], vector)
-    @clusters.drop(1).each do |cluster|
-      if distance(centers[cluster], vector) < record
-        nearest = cluster
-        record = distance(centers[nearest], vector)
+    nearestIndex = 0
+    record = distance(tempClusters[0].center, vector)
+
+    tempClusters.drop(1).each_index do |index|
+      center = tempClusters[index].center
+      if distance(center, vector) < record
+        nearestIndex = index
+        record = distance(center, vector)
       end
     end
+    return tempClusters[nearestIndex].cluster
   end
 
   def distance(vector1, vector2)
