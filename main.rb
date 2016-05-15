@@ -54,16 +54,16 @@ data_from_lrn_file 'WingNut.lrn'
 
   def run_isodata
 
-    desiredClusterCount = 3
+    desiredClusterCount = 2
     minClusterSize = 1
-    maxDeviation = 5
-    minClustersDistance = 3
+    maxDeviation = 3
+    minClustersDistance = 2
     maxPairsLumped = 1
     maxIteration = 3
 
     isodata = Isodata.new(desiredClusterCount, minClusterSize, maxDeviation, minClustersDistance, maxPairsLumped, maxIteration)
 
-    data = data_from_lrn_file 'test.lrn'
+    data = data_from_lrn_file 'germany.lrn'
     return isodata.analyze data
   end
 
@@ -81,14 +81,15 @@ data_from_lrn_file 'WingNut.lrn'
   def screen_position vector
     image_width = 16
     image_height = 16
+    margin = 16
 
-    realWidth = (@screenWidth - image_width).to_f
-    realHeight = (@screenHeight - image_height).to_f
+    realWidth = (@screenWidth - image_width - 2*margin).to_f
+    realHeight = (@screenHeight - image_height - 2*margin).to_f
     xRatio = realWidth / (@xMax - @xMin)
     yRatio = realHeight / (@yMax - @yMin)
     ratio = [xRatio, yRatio].min
-    x = vector[0] * ratio - @xMin + (realWidth - ratio * (@xMax - @xMin)) / 2
-    y = @screenHeight - (vector[1] * ratio - @yMin + (realHeight - ratio * (@yMax - @yMin)) / 2)
+    x = (vector[0] - @xMin) * ratio + (realWidth - ratio * (@xMax - @xMin)) / 2 + margin
+    y = -((vector[1] - @yMin) * ratio + (realHeight - ratio * (@yMax - @yMin)) / 2) + realHeight + margin
     z = 0
 
     return [x, y, z]
