@@ -7,15 +7,34 @@ class MyWindow < Gosu::Window
 
   def initialize
 
-    @screen_width = 1280
-    @screen_height = 768
-    super @screen_width, @screen_height, false
+    @dot = Gosu::Image.new('dot.png', :tileable => true)
+
+    @screenWidth = 1280
+    @screenHeight = 768
+    super @screenWidth, @screenHeight, false
     self.caption = 'ISODATA'
 
     @result = run_isodata
-    @dot = Gosu::Image.new('dot.png', :tileable => true)
+    return if @result.empty?
 
-    @colorMap = Hash[@result.each_with_index.map { |c,i| [c, get_color(i)] }]
+    @colorMap = Hash.new
+    @result.each_with_index.each do |cluster, index|
+      @colorMap[cluster] = get_color index
+    end
+
+    firstCluster = @result.first
+    firstVector = firstCluster.vectors.first
+    @xMin = firstVector[0]; @xMax = firstVector[0]
+    @yMin = firstVector[1]; @yMax = firstVector[1]
+
+    @result.each do |cluster|
+      cluster.vectors.each do |vector|
+        @xMin = vector[0] if vector[0] < @xMin
+        @xMax = vector[0] if vector[0] > @xMax
+        @yMin = vector[1] if vector[1] < @yMin
+        @yMax = vector[1] if vector[1] > @yMax
+      end
+    end
   end
 
   def draw
@@ -56,15 +75,20 @@ class MyWindow < Gosu::Window
   def screen_position vector
     image_width = 16
     image_height = 16
-    x = vector[0] * 50 + 50
-    y = - vector[1] * 50 + @screen_height - 50
+
+    realWidth = (@screenWidth - image_width).to_f
+    realHeight = (@screenHeight - image_height).to_f
+    xRatio = realWidth / (@xMax - @xMin)
+    yRatio = realHeight / (@yMax - @yMin)
+    ratio = [xRatio, yRatio].min
+    x = vector[0] * ratio - @xMin + (realWidth - ratio * (@xMax - @xMin)) / 2
+    y = @screenHeight - (vector[1] * ratio - @yMin + (realHeight - ratio * (@yMax - @yMin)) / 2)
     z = 0
 
     return [x, y, z]
   end
 
   def get_color index
-
     count = @result.size
     h = index * 360.0 / count
     s = 1
