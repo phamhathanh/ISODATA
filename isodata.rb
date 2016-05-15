@@ -76,6 +76,7 @@ class Isodata
           break if iteration % 2 == 0 or @clusters.size >= 2 * @desiredClusterCount
         end
 
+        overallAverageDistance = 
         unchecked_clusters = @clusters.to_a
         until unchecked_clusters.empty?
 
@@ -123,6 +124,16 @@ class Isodata
   end
 
   private
+
+  def overall_average_distance
+    sum = 0.0
+    count = 0
+    @clusters.each { |c|
+      sum += c.size * c.average_distance
+      count += c.size
+    }
+    return sum / count
+  end
 
   def lump clusterPair
     cluster1 = clusterPair[0]

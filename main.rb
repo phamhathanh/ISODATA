@@ -55,15 +55,15 @@ data_from_lrn_file 'WingNut.lrn'
   def run_isodata
 
     desiredClusterCount = 2
-    minClusterSize = 1
-    maxDeviation = 3
-    minClustersDistance = 2
-    maxPairsLumped = 1
+    minClusterSize = 500
+    maxDeviation = 0.75
+    minClustersDistance = 0.1
+    maxPairsLumped = 10
     maxIteration = 3
 
     isodata = Isodata.new(desiredClusterCount, minClusterSize, maxDeviation, minClustersDistance, maxPairsLumped, maxIteration)
 
-    data = data_from_lrn_file 'data/Lol.lrn'
+    data = data_from_lrn_file 'data/WingNut.lrn'
     return isodata.analyze data
   end
 
