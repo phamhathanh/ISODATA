@@ -114,8 +114,9 @@ class Isodata
 
       return @clusters if tooCloseClusterPairs.empty?
 
-      tooCloseClusterPairs.slice! @maxPairsLumped
-      tooCloseClusterPairs.each do |pair|
+      sortedByDistance = tooCloseClusterPairs.sort_by { |pair| distance(pair[0].center, pair[1].center) }
+      sortedByDistance.slice! @maxPairsLumped
+      sortedByDistance.each do |pair|
         lump pair
       end
     end
